@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Blog from "./components/Blog";
 import blogService from "./services/blogs";
-import login from "./services/login";
+import loginService from "./services/login";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
@@ -17,28 +17,26 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem('loggedNoteappUser')
+    const loggedUserJSON = window.localStorage.getItem("loggedNoteappUser");
     if (loggedUserJSON) {
-      const user = JSON.parse(loggedUserJSON)
-      setUser(user)
-      noteService.setToken(user.token)
+      const user = JSON.parse(loggedUserJSON);
+      setUser(user);
+      noteService.setToken(user.token);
     }
-  }, [])
+  }, []);
 
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
-      const user = await login({
+      const user = await loginService.login({
         username,
         password,
       });
-      window.localStorage.setItem("loggedNoteappUser", JSON.stringify(user));
-      blogService.setToken(user.token);
       setUser(user);
       setUsername("");
       setPassword("");
     } catch (exception) {
-      setErrorMessage("Wrong credentials");
+      setErrorMessage("wrong credentials");
       setTimeout(() => {
         setErrorMessage(null);
       }, 5000);
@@ -80,10 +78,14 @@ const App = () => {
       {user && (
         <>
           <p>Welcome, {user.name}!</p>
-          <button onClick={() => {
-            window.localStorage.removeItem("loggedNoteappUser");
-            setUser(null);
-          }}>Logout</button>
+          <button
+            onClick={() => {
+              window.localStorage.removeItem("loggedNoteappUser");
+              setUser(null);
+            }}
+          >
+            Logout
+          </button>
           <h2>blogs</h2>
           {errorMessage && <div style={{ color: "red" }}>{errorMessage}</div>}
           {blogs.map((blog) => (
