@@ -16,6 +16,15 @@ const App = () => {
     });
   }, []);
 
+  useEffect(() => {
+    const loggedUserJSON = window.localStorage.getItem('loggedNoteappUser')
+    if (loggedUserJSON) {
+      const user = JSON.parse(loggedUserJSON)
+      setUser(user)
+      noteService.setToken(user.token)
+    }
+  }, [])
+
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
@@ -39,6 +48,7 @@ const App = () => {
   const loginForm = () => (
     <>
       <h2>log in to application</h2>
+      {errorMessage && <div style={{ color: "red" }}>{errorMessage}</div>}
       <form onSubmit={handleLogin}>
         <div>
           username
@@ -70,6 +80,10 @@ const App = () => {
       {user && (
         <>
           <p>Welcome, {user.name}!</p>
+          <button onClick={() => {
+            window.localStorage.removeItem("loggedNoteappUser");
+            setUser(null);
+          }}>Logout</button>
           <h2>blogs</h2>
           {errorMessage && <div style={{ color: "red" }}>{errorMessage}</div>}
           {blogs.map((blog) => (
