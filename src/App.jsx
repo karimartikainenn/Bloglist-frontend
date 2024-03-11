@@ -70,14 +70,14 @@ const App = () => {
       </form>
     </>
   );
-
+  console.log(user);
   return (
     <div>
       {!user && loginForm()}
 
       {user && (
         <>
-          <p>Welcome, {user.name}!</p>
+          <p>Welcome, {user.username}!</p>
           <button
             onClick={() => {
               window.localStorage.removeItem("loggedNoteappUser");
