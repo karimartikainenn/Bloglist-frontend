@@ -1,11 +1,12 @@
-// App.js
 import React, { useState, useEffect } from "react";
 import BlogList from "./components/BlogList";
 import BlogForm from "./components/BlogForm";
 import LoginForm from "./components/LoginForm";
+import ThemeToggler from "./components/ThemeToggler";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
 import "./../node_modules/bootstrap/dist/css/bootstrap.min.css";
+import "./styles.css";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
@@ -37,10 +38,12 @@ const App = () => {
         password,
       });
       window.localStorage.setItem("loggedNoteappUser", JSON.stringify(user));
+      blogService.setToken(user.token)
+      console.log("user", user);
+      console.log("user.token", user.token);
       setUser(user);
-      setUsername(""); 
+      setUsername("");
       setPassword("");
-      blogService.setToken(user.token);
     } catch (exception) {
       setErrorMessage("wrong credentials");
       setTimeout(() => {
@@ -49,25 +52,18 @@ const App = () => {
     }
   };
 
-  const addBlog = async (event) => {
-    event.preventDefault();
+  const addBlog = async (newObject) => {
     try {
-      const newBlog = await blogService.create({
-        title,
-        author,
-        url,
-      });
-      setBlogs(blogs.concat(newBlog));
-      setTitle("");
-      setAuthor("");
-      setUrl("");
-    } catch (exception) {
-      setErrorMessage("Failed to create a new blog");
+      const newBlog = await blogService.create(newObject)
+      setBlogs(blogs.concat({ ...newBlog, user: { username: user.username } }))
+    } catch (error) {
+      console.log("error", error);
+      setErrorMessage("Error adding blog");
       setTimeout(() => {
         setErrorMessage(null);
       }, 5000);
     }
-  };
+  }
 
   const handleLogout = () => {
     window.localStorage.removeItem("loggedNoteappUser");
@@ -76,24 +72,28 @@ const App = () => {
 
   return (
     <div>
+      <ThemeToggler />
       {!user && (
         <LoginForm
           handleLogin={handleLogin}
           errorMessage={errorMessage}
-          username={username} 
-          password={password} 
-          setUsername={setUsername} 
-          setPassword={setPassword} 
+          username={username}
+          password={password}
+          setUsername={setUsername}
+          setPassword={setPassword}
         />
       )}
 
       {user && (
-        <>
+        <div className="container">
           <p>Welcome, {user.username}!</p>
-          <button className="btn btn-primary p-1 m-1" onClick={handleLogout}>Logout</button>
+          <button className="btn btn-primary p-1 m-1" onClick={handleLogout}>
+            Logout
+          </button>
           <BlogList blogs={blogs} />
+          <br />
           <BlogForm addBlog={addBlog} errorMessage={errorMessage} />
-        </>
+        </div>
       )}
     </div>
   );
