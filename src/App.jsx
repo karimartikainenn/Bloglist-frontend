@@ -9,6 +9,9 @@ const App = () => {
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [url, setUrl] = useState("");
 
   useEffect(() => {
     blogService.getAll().then((blogs) => {
@@ -21,7 +24,7 @@ const App = () => {
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON);
       setUser(user);
-      noteService.setToken(user.token);
+      blogService.setToken(user.token);
     }
   }, []);
 
@@ -32,9 +35,11 @@ const App = () => {
         username,
         password,
       });
+      window.localStorage.setItem("loggedNoteappUser", JSON.stringify(user));
       setUser(user);
       setUsername("");
       setPassword("");
+      blogService.setToken(user.token);
     } catch (exception) {
       setErrorMessage("wrong credentials");
       setTimeout(() => {
@@ -70,7 +75,27 @@ const App = () => {
       </form>
     </>
   );
-  console.log(user);
+
+  const addBlog = async (event) => {
+    event.preventDefault();
+    try {
+      const newBlog = await blogService.create({
+        title,
+        author,
+        url,
+      });
+      setBlogs(blogs.concat(newBlog));
+      setTitle("");
+      setAuthor("");
+      setUrl("");
+    } catch (exception) {
+      setErrorMessage("Failed to create a new blog");
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 5000);
+    }
+  };
+
   return (
     <div>
       {!user && loginForm()}
@@ -91,6 +116,40 @@ const App = () => {
           {blogs.map((blog) => (
             <Blog key={blog.id} blog={blog} />
           ))}
+
+          <h2>create new</h2>
+          <form onSubmit={addBlog}>
+            <div>
+              Title:
+              <input
+                type="text"
+                value={title}
+                name="Title"
+                onChange={({ target }) => setTitle(target.value)}
+              />
+            </div>
+            <div>
+              Author:
+              <input
+                type="text"
+                value={author}
+                name="Author"
+                onChange={({ target }) => setAuthor(target.value)}
+              />
+            </div>
+            <div>
+              Url:
+              <input
+                type="text"
+                value={url}
+                name="Url"
+                onChange={({ target }) => setUrl(target.value)}
+              />
+            </div>
+            <div>
+              <button type="submit">create</button>
+            </div>
+          </form>
         </>
       )}
     </div>
