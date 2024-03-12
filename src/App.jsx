@@ -1,17 +1,18 @@
+// App.js
 import React, { useState, useEffect } from "react";
-import Blog from "./components/Blog";
+import BlogList from "./components/BlogList";
+import BlogForm from "./components/BlogForm";
+import LoginForm from "./components/LoginForm";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
+import "./../node_modules/bootstrap/dist/css/bootstrap.min.css";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
-  const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("");
-  const [url, setUrl] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     blogService.getAll().then((blogs) => {
@@ -37,7 +38,7 @@ const App = () => {
       });
       window.localStorage.setItem("loggedNoteappUser", JSON.stringify(user));
       setUser(user);
-      setUsername("");
+      setUsername(""); 
       setPassword("");
       blogService.setToken(user.token);
     } catch (exception) {
@@ -47,34 +48,6 @@ const App = () => {
       }, 5000);
     }
   };
-
-  const loginForm = () => (
-    <>
-      <h2>log in to application</h2>
-      {errorMessage && <div style={{ color: "red" }}>{errorMessage}</div>}
-      <form onSubmit={handleLogin}>
-        <div>
-          username
-          <input
-            type="text"
-            value={username}
-            name="Username"
-            onChange={({ target }) => setUsername(target.value)}
-          />
-        </div>
-        <div>
-          password
-          <input
-            type="password"
-            value={password}
-            name="Password"
-            onChange={({ target }) => setPassword(target.value)}
-          />
-        </div>
-        <button type="submit">login</button>
-      </form>
-    </>
-  );
 
   const addBlog = async (event) => {
     event.preventDefault();
@@ -96,60 +69,30 @@ const App = () => {
     }
   };
 
+  const handleLogout = () => {
+    window.localStorage.removeItem("loggedNoteappUser");
+    setUser(null);
+  };
+
   return (
     <div>
-      {!user && loginForm()}
+      {!user && (
+        <LoginForm
+          handleLogin={handleLogin}
+          errorMessage={errorMessage}
+          username={username} 
+          password={password} 
+          setUsername={setUsername} 
+          setPassword={setPassword} 
+        />
+      )}
 
       {user && (
         <>
           <p>Welcome, {user.username}!</p>
-          <button
-            onClick={() => {
-              window.localStorage.removeItem("loggedNoteappUser");
-              setUser(null);
-            }}
-          >
-            Logout
-          </button>
-          <h2>blogs</h2>
-          {errorMessage && <div style={{ color: "red" }}>{errorMessage}</div>}
-          {blogs.map((blog) => (
-            <Blog key={blog.id} blog={blog} />
-          ))}
-
-          <h2>create new</h2>
-          <form onSubmit={addBlog}>
-            <div>
-              Title:
-              <input
-                type="text"
-                value={title}
-                name="Title"
-                onChange={({ target }) => setTitle(target.value)}
-              />
-            </div>
-            <div>
-              Author:
-              <input
-                type="text"
-                value={author}
-                name="Author"
-                onChange={({ target }) => setAuthor(target.value)}
-              />
-            </div>
-            <div>
-              Url:
-              <input
-                type="text"
-                value={url}
-                name="Url"
-                onChange={({ target }) => setUrl(target.value)}
-              />
-            </div>
-            <div>
-              <button type="submit">create</button>
-            </div>
-          </form>
+          <button className="btn btn-primary p-1 m-1" onClick={handleLogout}>Logout</button>
+          <BlogList blogs={blogs} />
+          <BlogForm addBlog={addBlog} errorMessage={errorMessage} />
         </>
       )}
     </div>
