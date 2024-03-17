@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react'
 
 const Blog = ({ blog }) => (
   <div>
@@ -7,6 +7,6 @@ const Blog = ({ blog }) => (
     <p>Url: {blog.url}</p>
     <p>Likes: {blog.likes}</p>
   </div>
-);
+)
 
-export default Blog;
+export default Blog

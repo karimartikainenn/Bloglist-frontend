@@ -1,26 +1,26 @@
-import React, { useState } from "react";
+import React, { useState } from 'react'
 
 const BlogList = ({ blogs, setBlogs, handleLike, handleRemove }) => {
-  const [expandedBlogId, setExpandedBlogId] = useState(null);
+  const [expandedBlogId, setExpandedBlogId] = useState(null)
 
   const toggleExpand = (id) => {
-    setExpandedBlogId((prevState) => (prevState === id ? null : id));
-  };
+    setExpandedBlogId((prevState) => (prevState === id ? null : id))
+  }
 
   // Järjestä blogit likejen mukaisessa suuruusjärjestyksessä
-  const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes);
+  const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes)
 
   return (
-    <div className="container">
-      <div className="row justify-content-center">
-        <div className="col-md-10">
-          <div className="card">
-            <div className="card-body">
-              <h2 className="card-title">Blogs</h2>
-              <div className="list-group">
+    <div className='container'>
+      <div className='row justify-content-center'>
+        <div className='col-md-10'>
+          <div className='card'>
+            <div className='card-body'>
+              <h2 className='card-title'>Blogs</h2>
+              <div className='list-group'>
                 {sortedBlogs.map((blog) => (
                   <React.Fragment key={blog.id}>
-                    <div className="list-group-item">
+                    <div className='list-group-item'>
                       <p>{blog.title}</p>
                       {/* Tarkista, onko user-kenttä määritelty ennen sen käyttöä */}
                       {blog.user && (
@@ -35,22 +35,22 @@ const BlogList = ({ blogs, setBlogs, handleLike, handleRemove }) => {
                       )}
                       <button
                         onClick={() => toggleExpand(blog.id)}
-                        className="btn btn-primary mr-2"
+                        className='btn btn-primary mr-2'
                       >
                         {expandedBlogId === blog.id
-                          ? "Hide Details"
-                          : "Show Details"}
+                          ? 'Hide Details'
+                          : 'Show Details'}
                       </button>
                       <button
                         onClick={() => handleLike(blog.id)}
-                        className="btn btn-success"
+                        className='btn btn-success'
                       >
                         Like
                       </button>
                       {/* Poista ylimääräinen </button> tästä */}
                       <button
                         onClick={() => handleRemove(blog.id)}
-                        className="btn btn-danger"
+                        className='btn btn-danger'
                       >
                         Remove
                       </button>
@@ -63,7 +63,7 @@ const BlogList = ({ blogs, setBlogs, handleLike, handleRemove }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default BlogList;
+export default BlogList
