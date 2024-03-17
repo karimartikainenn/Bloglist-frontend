@@ -23,7 +23,6 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    console.log("User is now: ", user);
     const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON);
@@ -32,7 +31,6 @@ const App = () => {
     }
   }, []);
 
-  // Define the notify function
   const showNotification = (message, type) => {
     setNotification({ message, type });
     setTimeout(() => {
@@ -40,41 +38,32 @@ const App = () => {
     }, 5000);
   };
 
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    try {
+      const loggedInUser = await loginService.login({
+        username,
+        password,
+      });
 
-const handleLogin = async (event) => {
-  event.preventDefault();
-  try {
-    const loggedInUser = await loginService.login({
-      username,
-      password,
-    });
-
-    window.localStorage.setItem(
-      "loggedBlogappUser",
-      JSON.stringify(loggedInUser)
-    );
-    blogService.setToken(loggedInUser.token);
-    setUser(loggedInUser);
-    setUsername("");
-    setPassword("");
-    // Clear any previous error message when login succeeds
-    setErrorMessage("");
-  } catch (error) {
-    // Update errorMessage state with the error message when login fails
-    setErrorMessage(error.message);
-    if (error.message === "Request failed with status code 401") {
+      window.localStorage.setItem(
+        "loggedBlogappUser",
+        JSON.stringify(loggedInUser)
+      );
+      blogService.setToken(loggedInUser.token);
+      setUser(loggedInUser);
+      setUsername("");
+      setPassword("");
+      setErrorMessage("");
+    } catch (error) {
       setErrorMessage("Invalid username or password");
     }
-  }
-};
-  
-
+  };
 
   const noteFormRef = useRef();
 
   const addBlog = async (newObject) => {
     try {
-      // Ensure token is set before making the API call
       blogService.setToken(user.token);
   
       const newBlog = await blogService.add(newObject);
@@ -82,22 +71,48 @@ const handleLogin = async (event) => {
         noteFormRef.current.toggleVisibility();
       }
       setBlogs(blogs.concat({ ...newBlog, user: { username: user.username } }));
-      showNotification("Blogi lisätty onnistuneesti", "success");
+      showNotification("Blog added successfully", "success");
     } catch (error) {
-      showNotification("Blogin lisääminen epäonnistui", "error");
+      showNotification("Failed to add blog", "error");
     }
   };
 
   const handleLogout = () => {
     window.localStorage.removeItem("loggedBlogappUser");
     setUser(null);
-    console.log("Logged out");
-    console.log("User is now: ", null); // Log the user state after setting it to null
   };
+
+  const handleLike = async (id) => {
+    const blogToUpdate = blogs.find((blog) => blog.id === id);
+    const updatedBlog = { ...blogToUpdate, likes: blogToUpdate.likes + 1 };
+
+    try {
+      const response = await blogService.update(id, updatedBlog);
+      setBlogs(
+        blogs.map((blog) =>
+          blog.id === id ? { ...blog, likes: response.likes } : blog
+        )
+      );
+    } catch (error) {
+      console.error("Error updating blog:", error);
+    }
+  };
+
+  const handleRemove = async (id) => {
+    const blogToRemove = blogs.find((blog) => blog.id === id);
+    if (window.confirm(`Remove blog ${blogToRemove.title} by ${blogToRemove.author}?`)) {
+      try {
+        await blogService.remove(id);
+        setBlogs(blogs.filter((blog) => blog.id !== id));
+        showNotification("Blog removed successfully", "success");
+      } catch (error) {
+        showNotification("Failed to remove blog", "error");
+      }
+    }
+  }
 
   return (
     <div>
-      {/* Näytä notifikaatio, jos sellainen on */}
       {notification && (
         <div className={`alert alert-${notification.type}`} role="alert">
           {notification.message}
@@ -119,7 +134,7 @@ const handleLogin = async (event) => {
           <button className="btn btn-primary p-1 m-1" onClick={handleLogout}>
             Logout
           </button>
-          <BlogList blogs={blogs} />
+          <BlogList blogs={blogs} handleLike={handleLike} handleRemove={handleRemove} />
           <br />
           <BlogForm ref={noteFormRef} addBlog={addBlog} errorMessage={errorMessage} />
         </div>
