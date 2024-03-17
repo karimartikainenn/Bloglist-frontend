@@ -1,17 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 
-const BlogForm = ({ addBlog, errorMessage }) => {
+const BlogForm = forwardRef(({ addBlog, errorMessage }, ref) => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [url, setUrl] = useState("");
 
   const addBlogs = (event) => {
-    event.preventDefault()
-    addBlog({ title, author, url })
-    setTitle('')
-    setAuthor('')
-    setUrl('')
-  }
+    event.preventDefault();
+    addBlog({ title, author, url });
+    // Reset form fields after submission
+    setTitle("");
+    setAuthor("");
+    setUrl("");
+  };
+
+  // Expose a function to toggle visibility using useImperativeHandle
+  useImperativeHandle(ref, () => ({
+    toggleVisibility() {
+      // Your logic to toggle visibility goes here
+    }
+  }));
 
   return (
     <div className="container">
@@ -20,7 +28,9 @@ const BlogForm = ({ addBlog, errorMessage }) => {
           <div className="card">
             <div className="card-body">
               <h2 className="card-title">Create New Blog</h2>
-              {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
+              {errorMessage && (
+                <div className="alert alert-danger">{errorMessage}</div>
+              )}
               <form onSubmit={addBlogs}>
                 <div className="form-group">
                   <label htmlFor="title">Title:</label>
@@ -52,7 +62,12 @@ const BlogForm = ({ addBlog, errorMessage }) => {
                     onChange={({ target }) => setUrl(target.value)}
                   />
                 </div>
-                <button type="submit" className="btn btn-primary btn-primary m-2 p-1">Create</button>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-primary m-2 p-1"
+                >
+                  Create
+                </button>
               </form>
             </div>
           </div>
@@ -60,6 +75,6 @@ const BlogForm = ({ addBlog, errorMessage }) => {
       </div>
     </div>
   );
-};
+});
 
 export default BlogForm;

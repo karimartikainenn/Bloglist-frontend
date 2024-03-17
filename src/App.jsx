@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import BlogList from "./components/BlogList";
 import BlogForm from "./components/BlogForm";
 import LoginForm from "./components/LoginForm";
-import ThemeToggler from "./components/ThemeToggler";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
 import "./../node_modules/bootstrap/dist/css/bootstrap.min.css";
@@ -14,6 +13,7 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [BlogFormVisible, setBlogFormVisible] = useState(false);
 
   useEffect(() => {
     blogService.getAll().then((blogs) => {
@@ -22,7 +22,8 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem("loggedNoteappUser");
+    console.log("User is now: ", user);
+    const loggedUserJSON = window.localStorage.getItem("loggedBlogappUser");
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON);
       setUser(user);
@@ -30,50 +31,66 @@ const App = () => {
     }
   }, []);
 
+  // Define the notify function
+  const notify = (message, color) => {
+    // Implement your notification logic here, such as showing a toast or alert
+    console.log(`Notification: ${message}, Color: ${color}`);
+    console.log("Message: ", message);
+  };
+
+
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
-      const user = await loginService.login({
+      const loggedInUser = await loginService.login({
         username,
         password,
       });
-      window.localStorage.setItem("loggedNoteappUser", JSON.stringify(user));
-      blogService.setToken(user.token)
-      console.log("user", user);
-      console.log("user.token", user.token);
-      setUser(user);
+  
+      window.localStorage.setItem(
+        "loggedBlogappUser",
+        JSON.stringify(loggedInUser)
+      );
+      blogService.setToken(loggedInUser.token);
+      setUser(loggedInUser);
       setUsername("");
       setPassword("");
-    } catch (exception) {
-      setErrorMessage("wrong credentials");
-      setTimeout(() => {
-        setErrorMessage(null);
-      }, 5000);
+      notify(`${loggedInUser.username} logged in successfully!`, "green");
+    } catch (error) {
+      notify(error.message, "red");
     }
   };
+  
+
+
+  const noteFormRef = useRef();
 
   const addBlog = async (newObject) => {
     try {
-      const newBlog = await blogService.create(newObject)
-      setBlogs(blogs.concat({ ...newBlog, user: { username: user.username } }))
+      // Ensure token is set before making the API call
+      blogService.setToken(user.token);
+  
+      const newBlog = await blogService.add(newObject);
+      if (noteFormRef.current) {
+        noteFormRef.current.toggleVisibility();
+      }
+      setBlogs(blogs.concat({ ...newBlog, user: { username: user.username } }));
+      notify(`A new blog "${newBlog.title}" by ${newBlog.author} added`, "green");
     } catch (error) {
-      console.log("error", error);
-      setErrorMessage("Error adding blog");
-      setTimeout(() => {
-        setErrorMessage(null);
-      }, 5000);
+      notify(error.message, "red");
     }
-  }
+  };
 
   const handleLogout = () => {
-    window.localStorage.removeItem("loggedNoteappUser");
+    window.localStorage.removeItem("loggedBlogappUser");
     setUser(null);
+    console.log("Logged out");
+    console.log("User is now: ", null); // Log the user state after setting it to null
   };
 
   return (
     <div>
-      <ThemeToggler />
-      {!user && (
+      {!user ? (
         <LoginForm
           handleLogin={handleLogin}
           errorMessage={errorMessage}
@@ -82,9 +99,7 @@ const App = () => {
           setUsername={setUsername}
           setPassword={setPassword}
         />
-      )}
-
-      {user && (
+      ) : (
         <div className="container">
           <p>Welcome, {user.username}!</p>
           <button className="btn btn-primary p-1 m-1" onClick={handleLogout}>
@@ -92,7 +107,7 @@ const App = () => {
           </button>
           <BlogList blogs={blogs} />
           <br />
-          <BlogForm addBlog={addBlog} errorMessage={errorMessage} />
+          <BlogForm ref={noteFormRef} addBlog={addBlog} errorMessage={errorMessage} />
         </div>
       )}
     </div>

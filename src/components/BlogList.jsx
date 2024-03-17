@@ -1,5 +1,4 @@
 import React from "react";
-import Blog from "./Blog";
 
 const BlogList = ({ blogs }) => {
   return (
