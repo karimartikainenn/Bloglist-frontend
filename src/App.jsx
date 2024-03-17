@@ -14,6 +14,7 @@ const App = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [BlogFormVisible, setBlogFormVisible] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     blogService.getAll().then((blogs) => {
@@ -32,34 +33,40 @@ const App = () => {
   }, []);
 
   // Define the notify function
-  const notify = (message, color) => {
-    // Implement your notification logic here, such as showing a toast or alert
-    console.log(`Notification: ${message}, Color: ${color}`);
-    console.log("Message: ", message);
+  const showNotification = (message, type) => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification(null);
+    }, 5000);
   };
 
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
-    try {
-      const loggedInUser = await loginService.login({
-        username,
-        password,
-      });
-  
-      window.localStorage.setItem(
-        "loggedBlogappUser",
-        JSON.stringify(loggedInUser)
-      );
-      blogService.setToken(loggedInUser.token);
-      setUser(loggedInUser);
-      setUsername("");
-      setPassword("");
-      notify(`${loggedInUser.username} logged in successfully!`, "green");
-    } catch (error) {
-      notify(error.message, "red");
+const handleLogin = async (event) => {
+  event.preventDefault();
+  try {
+    const loggedInUser = await loginService.login({
+      username,
+      password,
+    });
+
+    window.localStorage.setItem(
+      "loggedBlogappUser",
+      JSON.stringify(loggedInUser)
+    );
+    blogService.setToken(loggedInUser.token);
+    setUser(loggedInUser);
+    setUsername("");
+    setPassword("");
+    // Clear any previous error message when login succeeds
+    setErrorMessage("");
+  } catch (error) {
+    // Update errorMessage state with the error message when login fails
+    setErrorMessage(error.message);
+    if (error.message === "Request failed with status code 401") {
+      setErrorMessage("Invalid username or password");
     }
-  };
+  }
+};
   
 
 
@@ -75,9 +82,9 @@ const App = () => {
         noteFormRef.current.toggleVisibility();
       }
       setBlogs(blogs.concat({ ...newBlog, user: { username: user.username } }));
-      notify(`A new blog "${newBlog.title}" by ${newBlog.author} added`, "green");
+      showNotification("Blogi lisätty onnistuneesti", "success");
     } catch (error) {
-      notify(error.message, "red");
+      showNotification("Blogin lisääminen epäonnistui", "error");
     }
   };
 
@@ -90,6 +97,13 @@ const App = () => {
 
   return (
     <div>
+      {/* Näytä notifikaatio, jos sellainen on */}
+      {notification && (
+        <div className={`alert alert-${notification.type}`} role="alert">
+          {notification.message}
+        </div>
+      )}
+
       {!user ? (
         <LoginForm
           handleLogin={handleLogin}

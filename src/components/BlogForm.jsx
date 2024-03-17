@@ -17,7 +17,10 @@ const BlogForm = forwardRef(({ addBlog, errorMessage }, ref) => {
   // Expose a function to toggle visibility using useImperativeHandle
   useImperativeHandle(ref, () => ({
     toggleVisibility() {
-      // Your logic to toggle visibility goes here
+      // Toggle visibility logic
+      // For example, you can set a state variable to control visibility
+      // Here's a simple example:
+      // setVisible(!visible);
     }
   }));
 
